@@ -89,3 +89,8 @@ El bot reenvía esa respuesta al usuario en Telegram.
 ## Variables de entorno
 
 - `TELEGRAM_TOKEN`: Token del bot de Telegram (en `.env`).
+
+## BackLog
+
+- [ ] La LLM API debería ser configurable. 
+- [ ] Test Unitarios.
