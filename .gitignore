@@ -1,0 +1,23 @@
+# Entornos virtuales
+naru.venv/
+venv/
+.env
+
+# Archivos de configuración y variables de entorno
+*.env
+
+# Archivos de Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de VS Code
+.vscode/
+
+# Archivos de logs y temporales
+*.log
+*.sqlite3
+*.db
+
+# Otros archivos que quieras ignorar
+.DS_Store
