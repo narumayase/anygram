@@ -93,3 +93,8 @@ El bot reenvía esa respuesta al usuario en Telegram.
 - `TELEGRAM_TOKEN`: Token del bot de Telegram (en `.env`).
 - `TELEGRAM_API_URL`: Telegram url (en `.env`).
 - `LLM_URL`: LLM url (stored en `.env`).
+
+## BackLog
+
+- [ ] La LLM API debería ser configurable. 
+- [ ] Test Unitarios.
