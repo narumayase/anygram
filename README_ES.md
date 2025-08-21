@@ -1,6 +1,6 @@
-# AnyGram API
+# anygram API
 
-AnyGram es una API construida con FastAPI que permite enviar y recibir mensajes a través de un bot de Telegram, integrando respuestas automáticas generadas por un modelo LLM (Large Language Model).
+anygram es una API construida con FastAPI que permite enviar y recibir mensajes a través de un bot de Telegram, integrando respuestas automáticas generadas por un modelo LLM (Large Language Model).
 
 La API expone dos endpoints principales:
 
