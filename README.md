@@ -97,5 +97,4 @@ The bot then forwards that response back to the user on Telegram.
  
 ## BackLog
 
-- [ ] LLM API should be configurable. 
 - [ ] Unit Tests.
