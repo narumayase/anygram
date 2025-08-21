@@ -4,16 +4,16 @@ anygram es una API construida con FastAPI que permite enviar y recibir mensajes 
 
 La API expone dos endpoints principales:
 
-- **`/telegram/send`**: Permite enviar mensajes a cualquier chat de Telegram mediante el bot.
-- **`/telegram/webhook`**: Recibe mensajes enviados al bot desde Telegram, reenvía el texto recibido a una API LLM y responde automáticamente al usuario con la respuesta generada.
+- **`/telegram/send`**: Permite enviar mensajes a cualquier chat de Telegram a través del bot.
+- **`/telegram/webhook`**: Recibe mensajes enviados al bot desde Telegram, envía el texto recibido a una API LLM y responde automáticamente al usuario con la respuesta generada.
 
-## Estructura del proyecto
+## Estructura del Proyecto
 
 ```
 anygram
 ├── app
 │   ├── api.py              # Endpoints 
-│   ├── models.py           # Pydantic models o entidades simples
+│   ├── models.py           # Modelos Pydantic o entidades simples
 │   ├── services.py         # Integraciones (Telegram, LLM)
 │   ├── config.py           # Configuración (dotenv, etc.)
 │   └── main.py             # Punto de entrada
@@ -21,50 +21,74 @@ anygram
 └── README.md
 ```
 
-## Setup
+## Configuración
 
 1. Crear un entorno virtual:
    ```
    python -m venv venv
-   source venv/bin/activate  # En Windows usa `venv\Scripts\activate`
+   source venv/bin/activate  # En Windows usar `venv\Scripts\activate`
    ```
 
-2. Instalar las dependencias:
+2. Instalar dependencias:
    ```
    pip install -r requirements.txt
    ```
 
-3. Crear un archivo `.env` con las properties de Telegram y el LLM:
+3. Crear un archivo `.env`:
    ```
-   TELEGRAM_TOKEN=your_api_token
-   TELEGRAM_API_URL="https://api.telegram.org"   
+   # Configuración de Telegram (obligatoria)
+   TELEGRAM_TOKEN=tu_api_token
+   TELEGRAM_API_URL="https://api.telegram.org"
+
+   # Configuración del LLM (obligatoria)   
    LLM_URL=http://localhost:8081/api/v1/chat/ask
+
+   # Configuración del servidor (opcional)
+   HOST=127.0.0.1
+   PORT=8000
+   RELOAD=true
    ```
 
-## Usage
+## Uso
 
-Para correr la aplicación:
+Para ejecutar la aplicación:
 ```
-uvicorn app.main:app --reload
+uvicorn app.main:app --host $HOST --port $PORT
 ```
-Por defecto la API estará disponible en `http://127.0.0.1:8000`.
 
-### Enviar un mensaje
+Por defecto, la API estará disponible en `http://127.0.0.1:8000`.
 
-El POST a `/telegram/send` envía un mensaje al bot de Telegram, utilizando el siguiente body:
+## Endpoints
+
+### GET /health
+
+Chequea el estado de la API.
+
+```json
+{
+   "message": "anygram API is working!",
+   "status": "ok",
+   "host": "localhost",
+   "port": "8000"
+}
+```
+
+### Enviar un Mensaje
+
+Hacer un POST a `/telegram/send` envía un mensaje a través del bot de Telegram usando el siguiente cuerpo:
 
 ```json
 {
   "chat_id": "123456789",
-  "text": "Your message here"
+  "text": "Tu mensaje aquí"
 }
 ```
 
-### Webhook (Recibir y responder mensajes)
+### Webhook (Recibir y Responder Mensajes)
 
 El endpoint `/telegram/webhook` recibe mensajes de Telegram y responde automáticamente usando la integración con la API LLM.
 
-**Configuración del webhook:**
+**Ejemplo de Configuración del Webhook:**
 
 1. Exponer la API local usando [ngrok](https://ngrok.com/):
    ```
@@ -75,26 +99,27 @@ El endpoint `/telegram/webhook` recibe mensajes de Telegram y responde automáti
    ```
    curl -X POST "https://api.telegram.org/bot<TELEGRAM_TOKEN>/setWebhook?url=https://<NGROK_URL>/telegram/webhook"
    ```
-   Reemplazar `<TELEGRAM_TOKEN>` y `<NGROK_URL>` por los valores correspondientes.
+   Reemplazar `<TELEGRAM_TOKEN>` y `<NGROK_URL>` por los valores correctos.
 
-**Funcionamiento:**  
+**Cómo funciona:**  
 
-Cuando el bot recibe un mensaje, el texto se envía a la API LLM example: `http://localhost:8081/api/v1/chat/ask`, que debe responder con un JSON:
+Cuando el bot recibe un mensaje, el texto se envía a la API LLM, por ejemplo: `http://localhost:8081/api/v1/chat/ask`, la cual debería responder con un JSON:
 
 ```json
 {
-  "response": "Texto de respuesta"
+  "response": "Texto de la respuesta"
 }
 ```
-El bot reenvía esa respuesta al usuario en Telegram.
+El bot luego reenvía esa respuesta al usuario en Telegram.
 
-## Variables de entorno
+## Variables de Entorno
 
-- `TELEGRAM_TOKEN`: Token del bot de Telegram (en `.env`).
-- `TELEGRAM_API_URL`: Telegram url (en `.env`).
-- `LLM_URL`: LLM url (stored en `.env`).
+- `TELEGRAM_TOKEN`: Token del bot de Telegram (almacenado en `.env`).
+- `TELEGRAM_API_URL`: URL de Telegram (almacenado en `.env`).
+- `LLM_URL`: URL del LLM (almacenado en `.env`).
+- `HOST`: Host de la API (almacenado en `.env`).
+- `PORT`: Puerto de la API (almacenado en `.env`).
 
 ## BackLog
 
-- [ ] La LLM API debería ser configurable. 
 - [ ] Test Unitarios.

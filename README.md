@@ -53,10 +53,25 @@ anygram
 
 To run the application:
 ```
-uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
+uvicorn app.main:app --host $HOST --port $PORT
 ```
 
 By default, the API will be available at `http://127.0.0.1:8000`.
+
+## Endpoints
+
+### GET /health
+
+Checks the API status.
+
+```json
+{
+   "message": "anygram API is working!",
+   "status": "ok",
+   "host": "localhost",
+   "port": "8000"
+}
+```
 
 ### Send a Message
 
