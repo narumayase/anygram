@@ -34,18 +34,26 @@ anygram
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file with your Telegram and LLM properties:
+3. Create a `.env` file:
    ```
+   # Telegram configuration (required)
    TELEGRAM_TOKEN=your_api_token
    TELEGRAM_API_URL="https://api.telegram.org"
+
+   # LLM configuration (required)   
    LLM_URL=http://localhost:8081/api/v1/chat/ask
+
+   # server configuration (optional)
+   HOST=127.0.0.1
+   PORT=8000
+   RELOAD=true
    ```
 
 ## Usage
 
 To run the application:
 ```
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
 ```
 
 By default, the API will be available at `http://127.0.0.1:8000`.
@@ -65,7 +73,7 @@ POST to `/telegram/send` sends a message through the Telegram bot using the foll
 
 The `/telegram/webhook` endpoint receives messages from Telegram and automatically replies using the integration with the LLM API.
 
-**Webhook Configuration:**
+**Webhook Example Configuration:**
 
 1. Expose the local API using [ngrok](https://ngrok.com/):
    ```
@@ -94,7 +102,9 @@ The bot then forwards that response back to the user on Telegram.
 - `TELEGRAM_TOKEN`: Telegram bot token (stored in `.env`).
 - `TELEGRAM_API_URL`: Telegram url (stored in `.env`).
 - `LLM_URL`: LLM url (stored in `.env`).
- 
+- `HOST`: API host (stored in `.env`).
+- `PORT`: API port (stored in `.env`).
+
 ## BackLog
 
 - [ ] Unit Tests.
