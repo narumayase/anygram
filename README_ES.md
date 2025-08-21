@@ -34,9 +34,11 @@ anygram
    pip install -r requirements.txt
    ```
 
-3. Crear un archivo `.env` con tu token de bot de Telegram:
+3. Crear un archivo `.env` con las properties de Telegram y el LLM:
    ```
    TELEGRAM_TOKEN=your_api_token
+   TELEGRAM_API_URL="https://api.telegram.org"   
+   LLM_URL=http://localhost:8081/api/v1/chat/ask
    ```
 
 ## Usage
@@ -77,7 +79,7 @@ El endpoint `/telegram/webhook` recibe mensajes de Telegram y responde automáti
 
 **Funcionamiento:**  
 
-Cuando el bot recibe un mensaje, el texto se envía a la API LLM (`http://localhost:8081/api/v1/chat/ask`), que debe responder con un JSON:
+Cuando el bot recibe un mensaje, el texto se envía a la API LLM example: `http://localhost:8081/api/v1/chat/ask`, que debe responder con un JSON:
 
 ```json
 {
@@ -89,3 +91,5 @@ El bot reenvía esa respuesta al usuario en Telegram.
 ## Variables de entorno
 
 - `TELEGRAM_TOKEN`: Token del bot de Telegram (en `.env`).
+- `TELEGRAM_API_URL`: Telegram url (en `.env`).
+- `LLM_URL`: LLM url (stored en `.env`).
