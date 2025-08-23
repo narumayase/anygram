@@ -3,6 +3,8 @@ naru.venv/
 venv/
 .env
 
+.coverage
+
 # Archivos de configuración y variables de entorno
 *.env
 
