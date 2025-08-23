@@ -129,7 +129,7 @@ class TestSendMessageEndpoint:
         assert response.status_code == 500
         error_detail = response.json()
         assert "detail" in error_detail
-        assert error_detail["detail"] == "Error interno del servidor"
+        assert error_detail["detail"] == "Internal server error"
 
 
 class TestTelegramWebhookEndpoint:
@@ -323,7 +323,7 @@ class TestTelegramWebhookEndpoint:
         assert response.status_code == 500
         error_detail = response.json()
         assert "detail" in error_detail
-        assert "procesando la consulta" in error_detail["detail"]
+        assert "Error processing query" in error_detail["detail"]
         
         # send_telegram_message no debería haber sido llamado
         mock_send_telegram.assert_not_called()
@@ -354,7 +354,7 @@ class TestTelegramWebhookEndpoint:
         assert response.status_code == 500
         error_detail = response.json()
         assert "detail" in error_detail
-        assert "enviando respuesta" in error_detail["detail"]
+        assert "Error sending response" in error_detail["detail"]
         
         # Verificar que se llamó ask_llm pero falló en send_telegram_message
         mock_ask_llm.assert_called_once()
