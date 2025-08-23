@@ -4,12 +4,12 @@ pytest-cov>=4.1.0
 pytest-mock>=3.11.1
 pytest-asyncio>=0.21.1
 
-# Para mocking más avanzado si es necesario
+# For more advanced mocking if necessary
 responses>=0.23.3
 
-# Dependencias para testing de httpx y FastAPI
+# Dependencies for testing httpx and FastAPI
 httpx>=0.24.0
 fastapi>=0.68.0
 
-# Para testing de FastAPI
+# For testing FastAPI
 pytest-httpx>=0.21.0

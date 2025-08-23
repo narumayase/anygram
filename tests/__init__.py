@@ -1,1 +1,1 @@
-# Este archivo hace que el directorio tests sea un paquete Python
+# This file makes the tests directory a Python package

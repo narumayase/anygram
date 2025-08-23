@@ -4,18 +4,18 @@ import sys
 from unittest.mock import patch, MagicMock
 from io import StringIO
 
-# Agregar el directorio raíz al path para poder importar app
+# Add the root directory to the path to be able to import app
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 class TestConfigVariables:
-    """Test suite para las variables de configuración del módulo config"""
+    """Test suite for the configuration variables of the config module"""
     
     @patch('os.getenv')
     @patch('app.config.load_dotenv')
     def test_config_loads_custom_environment_variables(self, mock_load_dotenv, mock_getenv):
-        """Test que las variables de entorno personalizadas se cargan correctamente"""
-        # Configurar mock para getenv
+        """Test that custom environment variables are loaded correctly"""
+        # Configure mock for getenv
         env_vars = {
             'TELEGRAM_TOKEN': 'test_token_123',
             'TELEGRAM_API_URL': 'https://custom.telegram.api',
@@ -30,7 +30,7 @@ class TestConfigVariables:
         
         mock_getenv.side_effect = getenv_side_effect
         
-        # Reimportar el módulo
+        # Reimport the module
         import importlib
         import app.config
         importlib.reload(app.config)
@@ -45,8 +45,8 @@ class TestConfigVariables:
     @patch('os.getenv')
     @patch('app.config.load_dotenv')
     def test_config_loads_default_values(self, mock_load_dotenv, mock_getenv):
-        """Test que se cargan los valores por defecto cuando no hay variables de entorno"""
-        # Mock getenv para devolver None (excepto para valores con default)
+        """Test that default values are loaded when there are no environment variables"""
+        # Mock getenv to return None (except for values with default)
         def getenv_side_effect(key, default=None):
             return default
         
@@ -66,7 +66,7 @@ class TestConfigVariables:
     @patch('os.getenv')
     @patch('app.config.load_dotenv')
     def test_reload_boolean_conversion_uppercase_true(self, mock_load_dotenv, mock_getenv):
-        """Test que RELOAD se convierte correctamente a boolean con 'TRUE'"""
+        """Test that RELOAD is correctly converted to boolean with 'TRUE'"""
         def getenv_side_effect(key, default=None):
             if key == 'RELOAD':
                 return 'TRUE'
@@ -83,7 +83,7 @@ class TestConfigVariables:
     @patch('os.getenv')
     @patch('app.config.load_dotenv')
     def test_reload_boolean_conversion_mixed_case_false(self, mock_load_dotenv, mock_getenv):
-        """Test que RELOAD se convierte correctamente a boolean con 'False'"""
+        """Test that RELOAD is correctly converted to boolean with 'False'"""
         def getenv_side_effect(key, default=None):
             if key == 'RELOAD':
                 return 'False'
@@ -100,7 +100,7 @@ class TestConfigVariables:
     @patch('os.getenv')
     @patch('app.config.load_dotenv')
     def test_port_integer_conversion(self, mock_load_dotenv, mock_getenv):
-        """Test que PORT se convierte correctamente a entero"""
+        """Test that PORT is correctly converted to integer"""
         def getenv_side_effect(key, default=None):
             if key == 'PORT':
                 return '9999'
@@ -117,22 +117,22 @@ class TestConfigVariables:
 
 
 class TestValidateConfig:
-    """Test suite para la función validate_config"""
+    """Test suite for the validate_config function"""
     
     def setup_method(self):
-        """Setup que se ejecuta antes de cada test"""
-        # Capturar stdout para verificar los prints
+        """Setup that runs before each test"""
+        # Capture stdout to verify prints
         self.captured_output = StringIO()
         sys.stdout = self.captured_output
     
     def teardown_method(self):
-        """Teardown que se ejecuta después de cada test"""
-        # Restaurar stdout
+        """Teardown that runs after each test"""
+        # Restore stdout
         sys.stdout = sys.__stdout__
     
     def test_validate_config_success(self):
-        """Test que validate_config funciona correctamente con configuración válida"""
-        # Crear una versión modificada de validate_config para testing
+        """Test that validate_config works correctly with valid configuration"""
+        # Create a modified version of validate_config for testing
         def validate_config_test(telegram_token="valid_token", 
                                llm_url="http://localhost:8081/api/v1/chat/ask",
                                host="127.0.0.1", 
@@ -145,7 +145,7 @@ class TestValidateConfig:
             if not llm_url:
                 raise ValueError("LLM_URL environment variable is required")
                 
-            # Usar print directamente al captured_output
+            # Use print directly to captured_output
             self.captured_output.write(f"✅ Configuration loaded successfully:\n")
             self.captured_output.write(f"   - Host: {host}\n")
             self.captured_output.write(f"   - Port: {port}\n")
@@ -153,10 +153,10 @@ class TestValidateConfig:
             self.captured_output.write(f"   - LLM URL: {llm_url}\n")
             self.captured_output.write(f"   - Reload: {reload}\n")
         
-        # No debería lanzar excepción
+        # It should not raise an exception
         validate_config_test()
         
-        # Verificar que se escribió el mensaje de éxito
+        # Verify that the success message was written
         output = self.captured_output.getvalue()
         assert "✅ Configuration loaded successfully:" in output
         assert "Host: 127.0.0.1" in output
@@ -166,7 +166,7 @@ class TestValidateConfig:
         assert "Reload: True" in output
     
     def test_validate_config_missing_telegram_token(self):
-        """Test que validate_config lanza ValueError cuando falta TELEGRAM_TOKEN"""
+        """Test that validate_config raises ValueError when TELEGRAM_TOKEN is missing"""
         def validate_config_test(telegram_token=None, llm_url="http://test"):
             if not telegram_token:
                 raise ValueError("TELEGRAM_TOKEN environment variable is required")
@@ -177,7 +177,7 @@ class TestValidateConfig:
             validate_config_test(telegram_token=None)
     
     def test_validate_config_empty_telegram_token(self):
-        """Test que validate_config lanza ValueError cuando TELEGRAM_TOKEN está vacío"""
+        """Test that validate_config raises ValueError when TELEGRAM_TOKEN is empty"""
         def validate_config_test(telegram_token="", llm_url="http://test"):
             if not telegram_token:
                 raise ValueError("TELEGRAM_TOKEN environment variable is required")
@@ -188,7 +188,7 @@ class TestValidateConfig:
             validate_config_test(telegram_token="")
     
     def test_validate_config_missing_llm_url(self):
-        """Test que validate_config lanza ValueError cuando falta LLM_URL"""
+        """Test that validate_config raises ValueError when LLM_URL is missing"""
         def validate_config_test(telegram_token="valid", llm_url=None):
             if not telegram_token:
                 raise ValueError("TELEGRAM_TOKEN environment variable is required")
@@ -199,7 +199,7 @@ class TestValidateConfig:
             validate_config_test(llm_url=None)
     
     def test_validate_config_empty_llm_url(self):
-        """Test que validate_config lanza ValueError cuando LLM_URL está vacío"""
+        """Test that validate_config raises ValueError when LLM_URL is empty"""
         def validate_config_test(telegram_token="valid", llm_url=""):
             if not telegram_token:
                 raise ValueError("TELEGRAM_TOKEN environment variable is required")
@@ -210,40 +210,40 @@ class TestValidateConfig:
             validate_config_test(llm_url="")
     
     def test_validate_config_missing_both_required_vars(self):
-        """Test que validate_config lanza ValueError para TELEGRAM_TOKEN cuando ambas faltan"""
+        """Test that validate_config raises ValueError for TELEGRAM_TOKEN when both are missing"""
         def validate_config_test(telegram_token=None, llm_url=None):
             if not telegram_token:
                 raise ValueError("TELEGRAM_TOKEN environment variable is required")
             if not llm_url:
                 raise ValueError("LLM_URL environment variable is required")
         
-        # Debería lanzar error por TELEGRAM_TOKEN primero (orden de validación)
+        # It should raise an error for TELEGRAM_TOKEN first (validation order)
         with pytest.raises(ValueError, match="TELEGRAM_TOKEN environment variable is required"):
             validate_config_test(telegram_token=None, llm_url=None)
     
     def test_validate_config_integration(self):
-        """Test de integración real con la función validate_config"""
-        # Necesitamos mockear las variables del módulo antes de importar validate_config
+        """Integration test with the actual validate_config function"""
+        # We need to mock the module variables before importing validate_config
         with patch('app.config.TELEGRAM_TOKEN', 'test_token'), \
              patch('app.config.LLM_URL', 'http://test-llm'):
             
             from app.config import validate_config
             
-            # Debería funcionar sin lanzar excepción
+            # It should work without raising an exception
             try:
                 validate_config()
-                # Si llegamos aquí, el test pasó
+                # If we get here, the test passed
                 assert True
             except ValueError as e:
                 pytest.fail(f"validate_config() raised ValueError unexpectedly: {e}")
 
 
 class TestDotenvIntegration:
-    """Test suite para la integración con dotenv"""
+    """Test suite for dotenv integration"""
     
-    @patch('dotenv.load_dotenv')  # Patch del módulo dotenv directamente
+    @patch('dotenv.load_dotenv')  # Patch the dotenv module directly
     def test_load_dotenv_is_called(self, mock_load_dotenv):
-        """Test que load_dotenv se llama al importar el módulo"""
+        """Test that load_dotenv is called when the module is imported"""
         import importlib
         import app.config
         importlib.reload(app.config)
@@ -251,10 +251,10 @@ class TestDotenvIntegration:
         mock_load_dotenv.assert_called_once()
 
 
-# Fixtures para usar en tests si es necesario
+# Fixtures to use in tests if necessary
 @pytest.fixture
 def valid_config_env():
-    """Fixture que proporciona un entorno válido de configuración"""
+    """Fixture that provides a valid configuration environment"""
     return {
         'TELEGRAM_TOKEN': 'test_token_123',
         'TELEGRAM_API_URL': 'https://api.telegram.org',
@@ -267,7 +267,7 @@ def valid_config_env():
 
 @pytest.fixture
 def minimal_config_env():
-    """Fixture que proporciona la configuración mínima requerida"""
+    """Fixture that provides the minimum required configuration"""
     return {
         'TELEGRAM_TOKEN': 'required_token',
         'LLM_URL': 'http://required-llm:8080/api/chat'

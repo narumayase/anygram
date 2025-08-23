@@ -3,11 +3,11 @@ import httpx
 from unittest.mock import AsyncMock, patch, MagicMock
 from dataclasses import dataclass
 
-# Importar las funciones a testear
+# Import the functions to be tested
 from app.services import send_telegram_message, ask_llm
 
 
-# Mock para el objeto mensaje que usa send_telegram_message
+# Mock for the message object used by send_telegram_message
 @dataclass
 class MockMessage:
     chat_id: str
@@ -15,17 +15,17 @@ class MockMessage:
 
 
 class TestSendTelegramMessage:
-    """Test suite para la función send_telegram_message"""
+    """Test suite for the send_telegram_message function"""
     
     @pytest.mark.asyncio
     @patch('app.services.TELEGRAM_API_URL', 'https://api.telegram.org')
     @patch('app.services.TELEGRAM_TOKEN', 'test_bot_token_123')
     async def test_send_telegram_message_success(self):
-        """Test que send_telegram_message envía mensaje correctamente"""
-        # Crear mensaje mock
+        """Test that send_telegram_message sends a message correctly"""
+        # Create a mock message
         mock_msg = MockMessage(chat_id="123456789", text="Hello, world!")
         
-        # Respuesta mock exitosa de Telegram API
+        # Successful mock response from the Telegram API
         mock_response_data = {
             "ok": True,
             "result": {
@@ -37,24 +37,24 @@ class TestSendTelegramMessage:
             }
         }
         
-        # Mock del cliente httpx
+        # Mock the httpx client
         mock_response = MagicMock()
         mock_response.json.return_value = mock_response_data
         
         mock_client = AsyncMock()
         mock_client.post.return_value = mock_response
         
-        # Patch del AsyncClient
+        # Patch the AsyncClient
         with patch('httpx.AsyncClient') as mock_async_client:
             mock_async_client.return_value.__aenter__.return_value = mock_client
             
-            # Ejecutar función
+            # Execute the function
             result = await send_telegram_message(mock_msg)
             
-            # Verificaciones
+            # Verifications
             assert result == mock_response_data
             
-            # Verificar que se hizo la llamada POST correcta
+            # Verify that the correct POST call was made
             expected_url = "https://api.telegram.org/bottest_bot_token_123/sendMessage"
             expected_payload = {"chat_id": "123456789", "text": "Hello, world!"}
             
@@ -67,7 +67,7 @@ class TestSendTelegramMessage:
     @patch('app.services.TELEGRAM_API_URL', 'https://custom.telegram.api')
     @patch('app.services.TELEGRAM_TOKEN', 'custom_token_456')
     async def test_send_telegram_message_with_custom_config(self):
-        """Test con configuración personalizada de Telegram API"""
+        """Test with custom Telegram API configuration"""
         mock_msg = MockMessage(chat_id="987654321", text="Custom message")
         
         mock_response_data = {"ok": True, "result": {"message_id": 99}}
@@ -84,7 +84,7 @@ class TestSendTelegramMessage:
             
             assert result == mock_response_data
             
-            # Verificar URL personalizada
+            # Verify custom URL
             expected_url = "https://custom.telegram.api/botcustom_token_456/sendMessage"
             expected_payload = {"chat_id": "987654321", "text": "Custom message"}
             
@@ -97,10 +97,10 @@ class TestSendTelegramMessage:
     @patch('app.services.TELEGRAM_API_URL', 'https://api.telegram.org')
     @patch('app.services.TELEGRAM_TOKEN', 'test_token')
     async def test_send_telegram_message_with_special_characters(self):
-        """Test envío de mensaje con caracteres especiales"""
+        """Test sending a message with special characters"""
         mock_msg = MockMessage(
             chat_id="-100123456789",  # Group chat ID
-            text="¡Hola! 🤖 Mensaje con émojis y acentos"
+            text="Hello! 🤖 Message with emojis and accents"
         )
         
         mock_response_data = {"ok": True}
@@ -117,10 +117,10 @@ class TestSendTelegramMessage:
             
             assert result == mock_response_data
             
-            # Verificar que se envían los caracteres especiales correctamente
+            # Verify that special characters are sent correctly
             expected_payload = {
                 "chat_id": "-100123456789",
-                "text": "¡Hola! 🤖 Mensaje con émojis y acentos"
+                "text": "Hello! 🤖 Message with emojis and accents"
             }
             
             mock_client.post.assert_called_once_with(
@@ -132,10 +132,10 @@ class TestSendTelegramMessage:
     @patch('app.services.TELEGRAM_API_URL', 'https://api.telegram.org')
     @patch('app.services.TELEGRAM_TOKEN', 'test_token')
     async def test_send_telegram_message_api_error_response(self):
-        """Test que maneja respuesta de error de la API de Telegram"""
+        """Test that it handles an error response from the Telegram API"""
         mock_msg = MockMessage(chat_id="123", text="Error test")
         
-        # Respuesta de error de Telegram
+        # Telegram error response
         mock_error_response = {
             "ok": False,
             "error_code": 400,
@@ -153,24 +153,24 @@ class TestSendTelegramMessage:
             
             result = await send_telegram_message(mock_msg)
             
-            # La función devuelve la respuesta tal como viene de la API
+            # The function returns the response as it comes from the API
             assert result == mock_error_response
             assert result["ok"] == False
             assert result["error_code"] == 400
 
 
 class TestAskLlm:
-    """Test suite para la función ask_llm"""
+    """Test suite for the ask_llm function"""
     
     @pytest.mark.asyncio
     @patch('app.services.LLM_URL', 'http://localhost:8081/api/v1/chat/ask')
     async def test_ask_llm_success(self):
-        """Test que ask_llm obtiene respuesta correctamente del LLM"""
-        prompt = "¿Cuál es la capital de Francia?"
+        """Test that ask_llm gets a response correctly from the LLM"""
+        prompt = "What is the capital of France?"
         
-        # Respuesta mock del LLM
+        # Mock response from the LLM
         mock_llm_response = {
-            "response": "La capital de Francia es París."
+            "response": "The capital of France is Paris."
         }
         
         mock_response = MagicMock()
@@ -185,10 +185,10 @@ class TestAskLlm:
             
             result = await ask_llm(prompt)
             
-            assert result == "La capital de Francia es París."
+            assert result == "The capital of France is Paris."
             
-            # Verificar que se hizo la llamada correcta
-            expected_payload = {"prompt": "¿Cuál es la capital de Francia?"}
+            # Verify that the correct call was made
+            expected_payload = {"prompt": "What is the capital of France?"}
             mock_client.post.assert_called_once_with(
                 "http://localhost:8081/api/v1/chat/ask",
                 json=expected_payload
@@ -198,7 +198,7 @@ class TestAskLlm:
     @pytest.mark.asyncio
     @patch('app.services.LLM_URL', 'http://custom-llm:9000/chat')
     async def test_ask_llm_with_custom_url(self):
-        """Test ask_llm con URL personalizada del LLM"""
+        """Test ask_llm with a custom LLM URL"""
         prompt = "Test prompt"
         
         mock_llm_response = {"response": "Custom LLM response"}
@@ -216,7 +216,7 @@ class TestAskLlm:
             
             assert result == "Custom LLM response"
             
-            # Verificar URL personalizada
+            # Verify custom URL
             mock_client.post.assert_called_once_with(
                 "http://custom-llm:9000/chat",
                 json={"prompt": "Test prompt"}
@@ -225,10 +225,10 @@ class TestAskLlm:
     @pytest.mark.asyncio
     @patch('app.services.LLM_URL', 'http://localhost:8081/api/v1/chat/ask')
     async def test_ask_llm_with_long_prompt(self):
-        """Test ask_llm con prompt largo"""
-        long_prompt = "Este es un prompt muy largo " * 100  # 3100+ caracteres
+        """Test ask_llm with a long prompt"""
+        long_prompt = "This is a very long prompt " * 100  # 3100+ characters
         
-        mock_llm_response = {"response": "Respuesta a prompt largo"}
+        mock_llm_response = {"response": "Response to a long prompt"}
         mock_response = MagicMock()
         mock_response.json.return_value = mock_llm_response
         mock_response.raise_for_status.return_value = None
@@ -241,9 +241,9 @@ class TestAskLlm:
             
             result = await ask_llm(long_prompt)
             
-            assert result == "Respuesta a prompt largo"
+            assert result == "Response to a long prompt"
             
-            # Verificar que se envió el prompt completo
+            # Verify that the full prompt was sent
             expected_payload = {"prompt": long_prompt}
             mock_client.post.assert_called_once_with(
                 "http://localhost:8081/api/v1/chat/ask",
@@ -253,10 +253,10 @@ class TestAskLlm:
     @pytest.mark.asyncio
     @patch('app.services.LLM_URL', 'http://localhost:8081/api/v1/chat/ask')
     async def test_ask_llm_http_error(self):
-        """Test que ask_llm lanza excepción en error HTTP"""
+        """Test that ask_llm raises an exception on HTTP error"""
         prompt = "Test prompt"
         
-        # Mock response que lanza HTTPError
+        # Mock response that raises HTTPError
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "404 Not Found",
@@ -273,14 +273,14 @@ class TestAskLlm:
             with pytest.raises(httpx.HTTPStatusError):
                 await ask_llm(prompt)
             
-            # Verificar que se intentó hacer la llamada
+            # Verify that the call was attempted
             mock_client.post.assert_called_once()
             mock_response.raise_for_status.assert_called_once()
     
     @pytest.mark.asyncio
     @patch('app.services.LLM_URL', 'http://localhost:8081/api/v1/chat/ask')
     async def test_ask_llm_connection_error(self):
-        """Test que ask_llm maneja errores de conexión"""
+        """Test that ask_llm handles connection errors"""
         prompt = "Test prompt"
         
         mock_client = AsyncMock()
@@ -300,10 +300,10 @@ class TestAskLlm:
     @pytest.mark.asyncio
     @patch('app.services.LLM_URL', 'http://localhost:8081/api/v1/chat/ask')
     async def test_ask_llm_invalid_json_response(self):
-        """Test ask_llm con respuesta JSON inválida"""
+        """Test ask_llm with an invalid JSON response"""
         prompt = "Test prompt"
         
-        # Response que no tiene campo "response"
+        # Response that does not have a "response" field
         mock_llm_response = {"error": "Invalid response structure"}
         mock_response = MagicMock()
         mock_response.json.return_value = mock_llm_response
@@ -319,16 +319,16 @@ class TestAskLlm:
                 await ask_llm(prompt)
 
 
-# Fixtures útiles para reutilizar en tests
+# Useful fixtures for reuse in tests
 @pytest.fixture
 def sample_message():
-    """Fixture que proporciona un mensaje de ejemplo"""
+    """Fixture that provides a sample message"""
     return MockMessage(chat_id="123456789", text="Test message")
 
 
 @pytest.fixture
 def telegram_success_response():
-    """Fixture con respuesta exitosa de Telegram API"""
+    """Fixture with a successful response from the Telegram API"""
     return {
         "ok": True,
         "result": {
@@ -343,25 +343,25 @@ def telegram_success_response():
 
 @pytest.fixture
 def llm_success_response():
-    """Fixture con respuesta exitosa del LLM"""
-    return {"response": "Esta es la respuesta del LLM"}
+    """Fixture with a successful response from the LLM"""
+    return {"response": "This is the LLM's response"}
 
 
-# Tests de integración usando las fixtures
+# Integration tests using fixtures
 class TestServicesIntegration:
-    """Tests de integración para las funciones de servicios"""
+    """Integration tests for the service functions"""
     
     @pytest.mark.asyncio
     async def test_services_workflow(self, sample_message, telegram_success_response, llm_success_response):
-        """Test del flujo completo: recibir mensaje, consultar LLM, responder"""
-        # Este test simula el flujo completo que usaría la aplicación
+        """Test the full flow: receive message, query LLM, respond"""
+        # This test simulates the full flow that the application would use
         
-        # Mock para ask_llm
+        # Mock for ask_llm
         mock_llm_response = MagicMock()
         mock_llm_response.json.return_value = llm_success_response
         mock_llm_response.raise_for_status.return_value = None
         
-        # Mock para send_telegram_message  
+        # Mock for send_telegram_message  
         mock_telegram_response = MagicMock()
         mock_telegram_response.json.return_value = telegram_success_response
         
@@ -375,19 +375,19 @@ class TestServicesIntegration:
             
             mock_async_client.return_value.__aenter__.return_value = mock_client
             
-            # 1. Consultar al LLM
+            # 1. Query the LLM
             llm_response = await ask_llm(sample_message.text)
-            assert llm_response == "Esta es la respuesta del LLM"
+            assert llm_response == "This is the LLM's response"
             
-            # 2. Crear mensaje de respuesta
+            # 2. Create a response message
             response_message = MockMessage(
                 chat_id=sample_message.chat_id,
                 text=llm_response
             )
             
-            # 3. Enviar respuesta por Telegram
+            # 3. Send the response via Telegram
             telegram_result = await send_telegram_message(response_message)
             assert telegram_result == telegram_success_response
             
-            # Verificar que se hicieron ambas llamadas
+            # Verify that both calls were made
             assert mock_client.post.call_count == 2
