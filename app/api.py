@@ -34,7 +34,7 @@ async def send_message(request: Request, msg: Message):
 async def telegram_webhook(request: Request):
     try:
         data = await request.json()
-        print("Message received:", data)
+        logger.debug("message received:", data)
 
         if "message" not in data or "text" not in data["message"] or "chat" not in data["message"] or "id" not in data["message"]["chat"]:
             raise HTTPException(status_code=400, detail="Invalid Telegram webhook payload")

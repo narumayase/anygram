@@ -19,6 +19,7 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "anygram.prompts")
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "8000"))
 RELOAD = os.getenv("RELOAD", "true").lower() == "true"
+LOG_LEVEL=os.getenv("LOG_LEVEL", "INFO").upper()
 
 # validate configurations
 def validate_config():
@@ -34,6 +35,7 @@ def validate_config():
     print(f"   - Telegram API: {TELEGRAM_API_URL}")
     print(f"   - LLM URL: {LLM_URL}")
     print(f"   - Reload: {RELOAD}")
+    print(f"   - Log level: {LOG_LEVEL}")
     if KAFKA_ENABLED:
         print(f"   - Kafka Broker: {KAFKA_BROKER}")
         print(f"   - Kafka Topic: {KAFKA_TOPIC}")

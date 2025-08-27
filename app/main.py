@@ -1,8 +1,16 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.api import router
-from app.config import validate_config, HOST, PORT, RELOAD
+from app.config import validate_config, HOST, PORT, RELOAD, LOG_LEVEL
 import uvicorn
+import logging
+
+numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
+
+logging.basicConfig(
+    level=numeric_level,  # log_level
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 
 validate_config()
 
