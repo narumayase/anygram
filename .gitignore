@@ -1,23 +1,25 @@
-# Entornos virtuales
+# Virtual environments
 naru.venv/
 venv/
 .env
 
-# Archivos de configuración y variables de entorno
+.coverage
+
+# Configuration files and environment variables
 *.env
 
-# Archivos de Python compilados
+# Compiled Python files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Archivos de VS Code
+# VS Code files
 .vscode/
 
-# Archivos de logs y temporales
+# Log and temporary files
 *.log
 *.sqlite3
 *.db
 
-# Otros archivos que quieras ignorar
+# Other files to ignore
 .DS_Store

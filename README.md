@@ -120,6 +120,20 @@ The bot then forwards that response back to the user on Telegram.
 - `HOST`: API host (stored in `.env`).
 - `PORT`: API port (stored in `.env`).
 
+# Testing
+
+- All tests:
+
+```bash
+pytest
+```
+
+- All test with coverage:
+
+```bash
+pytest --cov=app --cov-report=term-missing tests/
+```
+
 ## BackLog
 
 - [ ] Unit Tests.
