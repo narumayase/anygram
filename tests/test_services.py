@@ -11,7 +11,7 @@ from app.services import send_telegram_message, ask_llm
 @dataclass
 class MockMessage:
     chat_id: str
-    text: str
+    message_response: str
 
 
 class TestSendTelegramMessage:
@@ -23,7 +23,7 @@ class TestSendTelegramMessage:
     async def test_send_telegram_message_success(self):
         """Test that send_telegram_message sends a message correctly"""
         # Create a mock message
-        mock_msg = MockMessage(chat_id="123456789", text="Hello, world!")
+        mock_msg = MockMessage(chat_id="123456789", message_response="Hello, world!")
         
         # Successful mock response from the Telegram API
         mock_response_data = {
@@ -68,7 +68,7 @@ class TestSendTelegramMessage:
     @patch('app.services.TELEGRAM_TOKEN', 'custom_token_456')
     async def test_send_telegram_message_with_custom_config(self):
         """Test with custom Telegram API configuration"""
-        mock_msg = MockMessage(chat_id="987654321", text="Custom message")
+        mock_msg = MockMessage(chat_id="987654321", message_response="Custom message")
         
         mock_response_data = {"ok": True, "result": {"message_id": 99}}
         mock_response = MagicMock()
@@ -100,7 +100,7 @@ class TestSendTelegramMessage:
         """Test sending a message with special characters"""
         mock_msg = MockMessage(
             chat_id="-100123456789",  # Group chat ID
-            text="Hello! 🤖 Message with emojis and accents"
+            message_response="Hello! 🤖 Message with emojis and accents"
         )
         
         mock_response_data = {"ok": True}
@@ -133,7 +133,7 @@ class TestSendTelegramMessage:
     @patch('app.services.TELEGRAM_TOKEN', 'test_token')
     async def test_send_telegram_message_api_error_response(self):
         """Test that it handles an error response from the Telegram API"""
-        mock_msg = MockMessage(chat_id="123", text="Error test")
+        mock_msg = MockMessage(chat_id="123", message_response="Error test")
         
         # Telegram error response
         mock_error_response = {
@@ -170,7 +170,7 @@ class TestAskLlm:
         
         # Mock response from the LLM
         mock_llm_response = {
-            "response": "The capital of France is Paris."
+            "message_response": "The capital of France is Paris."
         }
         
         mock_response = MagicMock()
@@ -201,7 +201,7 @@ class TestAskLlm:
         """Test ask_llm with a custom LLM URL"""
         prompt = "Test prompt"
         
-        mock_llm_response = {"response": "Custom LLM response"}
+        mock_llm_response = {"message_response": "Custom LLM response"}
         mock_response = MagicMock()
         mock_response.json.return_value = mock_llm_response
         mock_response.raise_for_status.return_value = None
@@ -228,7 +228,7 @@ class TestAskLlm:
         """Test ask_llm with a long prompt"""
         long_prompt = "This is a very long prompt " * 100  # 3100+ characters
         
-        mock_llm_response = {"response": "Response to a long prompt"}
+        mock_llm_response = {"message_response": "Response to a long prompt"}
         mock_response = MagicMock()
         mock_response.json.return_value = mock_llm_response
         mock_response.raise_for_status.return_value = None
@@ -323,7 +323,7 @@ class TestAskLlm:
 @pytest.fixture
 def sample_message():
     """Fixture that provides a sample message"""
-    return MockMessage(chat_id="123456789", text="Test message")
+    return MockMessage(chat_id="123456789", message_response="Test message")
 
 
 @pytest.fixture
@@ -344,7 +344,7 @@ def telegram_success_response():
 @pytest.fixture
 def llm_success_response():
     """Fixture with a successful response from the LLM"""
-    return {"response": "This is the LLM's response"}
+    return {"message_response": "This is the LLM's response"}
 
 
 # Integration tests using fixtures
@@ -376,13 +376,13 @@ class TestServicesIntegration:
             mock_async_client.return_value.__aenter__.return_value = mock_client
             
             # 1. Query the LLM
-            llm_response = await ask_llm(sample_message.text)
+            llm_response = await ask_llm(sample_message.message_response)
             assert llm_response == "This is the LLM's response"
             
             # 2. Create a response message
             response_message = MockMessage(
                 chat_id=sample_message.chat_id,
-                text=llm_response
+                message_response=llm_response
             )
             
             # 3. Send the response via Telegram
