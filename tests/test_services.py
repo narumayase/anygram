@@ -325,23 +325,32 @@ class TestSendKafkaMessage:
     """Test suite for the send_kafka_message function"""
 
     @patch('app.services.KafkaProducer')
+    @patch('app.services.KAFKA_BROKER', 'localhost:9092')
+    @patch('app.services.KAFKA_TOPIC', 'anygram.prompts')
     def test_send_kafka_message_success(self, mock_kafka_producer):
         """Test that send_kafka_message sends a message correctly to Kafka"""
-        mock_producer_instance = mock_kafka_producer.return_value
+        mock_producer_instance = MagicMock()
+        mock_kafka_producer.return_value = mock_producer_instance
+        
         prompt = "Test prompt for Kafka"
         chat_id = "12345"
 
         send_kafka_message(prompt, chat_id)
 
+        # Check that KafkaProducer was instantiated correctly
         mock_kafka_producer.assert_called_once_with(
-            bootstrap_servers="localhost:9092",
+            bootstrap_servers='localhost:9092',
             value_serializer=unittest.mock.ANY
         )
+        
+        # Check that send was called with correct parameters
         mock_producer_instance.send.assert_called_once_with(
-            "anygram.prompts",
+            'anygram.prompts',
             value={"prompt": prompt},
             headers=[('routing_id', f'telegram:{chat_id}'.encode('utf-8'))]
         )
+        
+        # Check that flush was called
         mock_producer_instance.flush.assert_called_once()
 
 

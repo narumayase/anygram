@@ -483,6 +483,9 @@ class TestKafkaIntegration:
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     def test_send_message_with_routing_id_header(self, mock_send_telegram):
         """Test /send endpoint with X-Routing-ID header"""
+        # Mock the return value properly
+        mock_send_telegram.return_value = {"ok": True, "result": {"message_id": 42}}
+        
         payload = {"message_response": "Response from Kafka"}
         headers = {"X-Routing-ID": "telegram:12345"}
 
