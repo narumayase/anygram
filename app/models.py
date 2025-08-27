@@ -1,6 +1,6 @@
 from typing import Union
 from pydantic import BaseModel
 
-class TelegramMessage(BaseModel):
+class Message(BaseModel):
     chat_id: Union[str, int]
-    text: str
+    message_response: str

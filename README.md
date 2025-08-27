@@ -123,3 +123,4 @@ The bot then forwards that response back to the user on Telegram.
 ## BackLog
 
 - [ ] Unit Tests.
+- [ ] Add integration with kafka (producer).
