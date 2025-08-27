@@ -47,7 +47,26 @@ anygram
    HOST=127.0.0.1
    PORT=8000
    RELOAD=true
+   LOG_LEVEL=INFO
+
+   # Kafka configuration (optional)
+   KAFKA_ENABLED=false
+   KAFKA_BROKER=localhost:9092
+   KAFKA_TOPIC=input-messages
    ```
+
+## Environment Variables
+
+- `TELEGRAM_TOKEN`: Telegram bot token (required).
+- `TELEGRAM_API_URL`: Telegram API URL (optional, defaults to `https://api.telegram.org`).
+- `LLM_URL`: LLM API URL (optional, defaults to `http://localhost:8081/api/v1/chat/ask`).
+- `HOST`: API host (optional, defaults to `127.0.0.1`).
+- `PORT`: API port (optional, defaults to `8000`).
+- `RELOAD`: Enable auto-reloading of the server (optional, defaults to `true`).
+- `LOG_LEVEL`: Logging level (optional, defaults to `INFO`).
+- `KAFKA_ENABLED`: Enable Kafka integration (optional, defaults to `false`).
+- `KAFKA_BROKER`: Kafka broker address (optional, defaults to `localhost:9092`).
+- `KAFKA_TOPIC`: Kafka topic for prompts (optional, defaults to `anygram.prompts`).
 
 ## Usage
 
@@ -57,6 +76,25 @@ uvicorn app.main:app --host $HOST --port $PORT
 ```
 
 By default, the API will be available at `http://127.0.0.1:8000`.
+
+## Kafka Integration
+
+This API supports integration with Kafka for asynchronous message processing. When Kafka is enabled, incoming messages from Telegram webhooks will be sent to a Kafka topic instead of being processed directly by the LLM.
+
+To enable Kafka integration, set the `KAFKA_ENABLED` environment variable to `true` in your `.env` file:
+
+```
+KAFKA_ENABLED=true
+KAFKA_BROKER=localhost:9092  # Your Kafka broker address
+KAFKA_TOPIC=anygram.prompts  # The topic to send messages to
+```
+
+When `KAFKA_ENABLED` is `true`:
+- The `/telegram/webhook` endpoint will send the incoming message to the configured Kafka topic.
+- The API will respond immediately with `{"ok": True, "source": "kafka"}`.
+- The actual LLM processing and Telegram response will be handled by a separate consumer service that reads from the Kafka topic.
+
+If `KAFKA_ENABLED` is `false` (default), the API will process messages synchronously using the LLM and respond directly via Telegram, as described in the "Webhook" section.
 
 ## Endpoints
 
@@ -101,25 +139,6 @@ The `/telegram/webhook` endpoint receives messages from Telegram and automatical
    ```
    Replace `<TELEGRAM_TOKEN>` and `<NGROK_URL>` with the correct values.
 
-**How it works:**  
-
-When the bot receives a message, the text is sent to the LLM API example :`http://localhost:8081/api/v1/chat/ask`, which should reply with a JSON:
-
-```json
-{
-  "response": "Response text"
-}
-```
-The bot then forwards that response back to the user on Telegram.
-
-## Environment Variables
-
-- `TELEGRAM_TOKEN`: Telegram bot token (stored in `.env`).
-- `TELEGRAM_API_URL`: Telegram url (stored in `.env`).
-- `LLM_URL`: LLM url (stored in `.env`).
-- `HOST`: API host (stored in `.env`).
-- `PORT`: API port (stored in `.env`).
-
 # Testing
 
 - All tests:
@@ -136,5 +155,5 @@ pytest --cov=app --cov-report=term-missing tests/
 
 ## BackLog
 
-- [ ] Unit Tests.
+- [x] Unit Tests.
 - [ ] Add integration with kafka (producer).

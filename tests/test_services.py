@@ -42,6 +42,7 @@ class TestSendTelegramMessage:
         # Mock the httpx client
         mock_response = MagicMock()
         mock_response.json.return_value = mock_response_data
+        mock_response.raise_for_status.return_value = None
         
         mock_client = AsyncMock()
         mock_client.post.return_value = mock_response
@@ -75,6 +76,7 @@ class TestSendTelegramMessage:
         mock_response_data = {"ok": True, "result": {"message_id": 99}}
         mock_response = MagicMock()
         mock_response.json.return_value = mock_response_data
+        mock_response.raise_for_status.return_value = None
         
         mock_client = AsyncMock()
         mock_client.post.return_value = mock_response
@@ -108,6 +110,7 @@ class TestSendTelegramMessage:
         mock_response_data = {"ok": True}
         mock_response = MagicMock()
         mock_response.json.return_value = mock_response_data
+        mock_response.raise_for_status.return_value = None
         
         mock_client = AsyncMock()
         mock_client.post.return_value = mock_response
@@ -146,6 +149,7 @@ class TestSendTelegramMessage:
         
         mock_response = MagicMock()
         mock_response.json.return_value = mock_error_response
+        mock_response.raise_for_status.return_value = None
         
         mock_client = AsyncMock()
         mock_client.post.return_value = mock_response
@@ -340,14 +344,19 @@ class TestSendKafkaMessage:
         # Check that KafkaProducer was instantiated correctly
         mock_kafka_producer.assert_called_once_with(
             bootstrap_servers='localhost:9092',
-            value_serializer=unittest.mock.ANY
+            value_serializer=unittest.mock.ANY,
+            key_serializer=unittest.mock.ANY
         )
         
         # Check that send was called with correct parameters
         mock_producer_instance.send.assert_called_once_with(
             'anygram.prompts',
+            key=f"telegram:{chat_id}",
             value={"prompt": prompt},
-            headers=[('routing_id', f'telegram:{chat_id}'.encode('utf-8'))]
+            headers=[
+                ('correlation_id', unittest.mock.ANY),
+                ('origin', b'anygram')
+            ]
         )
         
         # Check that flush was called
