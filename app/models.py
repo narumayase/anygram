@@ -1,6 +1,6 @@
-from typing import Union
+from typing import Union, Optional
 from pydantic import BaseModel
 
 class Message(BaseModel):
-    chat_id: Union[str, int]
+    chat_id: Optional[Union[str, int]] = None
     message_response: str
