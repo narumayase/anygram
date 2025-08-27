@@ -5,7 +5,7 @@ from kafka import KafkaProducer
 
 async def send_telegram_message(msg):
     url = f"{TELEGRAM_API_URL}/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {"chat_id": msg.chat_id, "text": msg.message_response}
+    payload = {"chat_id": msg.chat_id, "text": msg.text}
     async with httpx.AsyncClient() as client:
         r = await client.post(url, json=payload)
         return r.json()
@@ -16,7 +16,7 @@ async def ask_llm(prompt: str) -> str:
         resp = await client.post(LLM_URL, json=payload)
         resp.raise_for_status()
         data = resp.json()
-        return data["message_response"]
+        return data["response"]
 
 def send_kafka_message(prompt: str, chat_id: str):
     producer = KafkaProducer(

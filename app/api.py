@@ -56,7 +56,7 @@ async def telegram_webhook(request: Request):
                 logger.error(f"Error querying LLM: {e}")
                 raise HTTPException(status_code=500, detail="Error processing query")
             
-            msg = Message(chat_id=chat_id, message_response=llm_response)
+            msg = Message(chat_id=chat_id, text=llm_response)
             
             try:
                 await send_telegram_message(msg)

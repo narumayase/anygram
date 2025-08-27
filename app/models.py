@@ -3,4 +3,4 @@ from pydantic import BaseModel
 
 class Message(BaseModel):
     chat_id: Optional[Union[str, int]] = None
-    message_response: str
+    text: str

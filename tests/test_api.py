@@ -33,7 +33,7 @@ class TestSendMessageEndpoint:
         # Test payload
         payload = {
             "chat_id": "123456789",
-            "message_response": "Hello, this is a test message!"
+            "text": "Hello, this is a test message!"
         }
         
         # Make request to the endpoint
@@ -47,7 +47,7 @@ class TestSendMessageEndpoint:
         mock_send_telegram.assert_called_once()
         called_msg = mock_send_telegram.call_args[0][0]
         assert called_msg.chat_id == "123456789"
-        assert called_msg.message_response == "Hello, this is a test message!"
+        assert called_msg.text == "Hello, this is a test message!"
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     def test_send_message_with_group_chat(self, mock_send_telegram):
@@ -58,7 +58,7 @@ class TestSendMessageEndpoint:
         # Group chat (negative ID)
         payload = {
             "chat_id": "-100123456789",
-            "message_response": "Message for the group"
+            "text": "Message for the group"
         }
         
         response = client.post("/telegram/send", json=payload)
@@ -77,19 +77,19 @@ class TestSendMessageEndpoint:
         
         payload = {
             "chat_id": "123456789",
-            "message_response": "Hello! 🚀 Message with emojis and accents: ñáéíóú"
+            "text": "Hello! 🚀 Message with emojis and accents: ñáéíóú"
         }
         
         response = client.post("/telegram/send", json=payload)
         
         assert response.status_code == 200
         called_msg = mock_send_telegram.call_args[0][0]
-        assert called_msg.message_response == "Hello! 🚀 Message with emojis and accents: ñáéíóú"
+        assert called_msg.text == "Hello! 🚀 Message with emojis and accents: ñáéíóú"
     
     def test_send_message_invalid_payload(self):
         """Test with invalid payload (missing required fields)"""
         # Payload without chat_id
-        payload = {"message_response": "Missing chat_id"}
+        payload = {"text": "Missing chat_id"}
         
         response = client.post("/telegram/send", json=payload)
         
@@ -102,7 +102,7 @@ class TestSendMessageEndpoint:
         """Test with empty text"""
         payload = {
             "chat_id": "123456789",
-            "message_response": ""
+            "text": ""
         }
         
         response = client.post("/telegram/send", json=payload)
@@ -120,7 +120,7 @@ class TestSendMessageEndpoint:
         
         payload = {
             "chat_id": "123456789",
-            "message_response": "Test message"
+            "text": "Test message"
         }
         
         response = client.post("/telegram/send", json=payload)
@@ -181,7 +181,7 @@ class TestTelegramWebhookEndpoint:
         mock_send_telegram.assert_called_once()
         called_msg = mock_send_telegram.call_args[0][0]
         assert called_msg.chat_id == 987654321
-        assert called_msg.message_response == "This is the LLM's response"
+        assert called_msg.text == "This is the LLM's response"
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
@@ -240,7 +240,7 @@ class TestTelegramWebhookEndpoint:
         # Verify that special characters were processed correctly
         mock_ask_llm.assert_called_once_with("How are you? 😊")
         called_msg = mock_send_telegram.call_args[0][0]
-        assert called_msg.message_response == "Response with emojis! 🤖"
+        assert called_msg.text == "Response with emojis! 🤖"
     
     def test_webhook_missing_message_field(self):
         """Test webhook without 'message' field"""
@@ -397,7 +397,7 @@ class TestApiIntegration:
         # 2. Verify that we could also send a manual message
         manual_payload = {
             "chat_id": "987654321",
-            "message_response": "Manual test message"
+            "text": "Manual test message"
         }
         
         manual_response = client.post("/telegram/send", json=manual_payload)
@@ -437,7 +437,7 @@ def sample_send_payload():
     """Fixture with a typical payload for the /send endpoint"""
     return {
         "chat_id": "123456789",
-        "message_response": "Test message from fixture"
+        "text": "Test message from fixture"
     }
 
 # Test using fixtures
@@ -465,7 +465,7 @@ class TestApiWithFixtures:
         
         assert response.status_code == 200
         called_msg = mock_send_telegram.call_args[0][0]
-        assert called_msg.message_response == "Test message from fixture"
+        assert called_msg.text == "Test message from fixture"
 
 class TestKafkaIntegration:
     """Tests for Kafka integration"""
@@ -486,7 +486,7 @@ class TestKafkaIntegration:
         # Mock the return value properly
         mock_send_telegram.return_value = {"ok": True, "result": {"message_id": 42}}
         
-        payload = {"message_response": "Response from Kafka"}
+        payload = {"text": "Response from Kafka"}
         headers = {"X-Routing-ID": "telegram:12345"}
 
         response = client.post("/telegram/send", json=payload, headers=headers)
@@ -495,11 +495,11 @@ class TestKafkaIntegration:
         mock_send_telegram.assert_called_once()
         called_msg = mock_send_telegram.call_args[0][0]
         assert called_msg.chat_id == "12345"
-        assert called_msg.message_response == "Response from Kafka"
+        assert called_msg.text == "Response from Kafka"
 
     def test_send_message_missing_routing_id_header(self):
         """Test /send endpoint with missing X-Routing-ID header"""
-        payload = {"message_response": "Response from Kafka"}
+        payload = {"text": "Response from Kafka"}
 
         response = client.post("/telegram/send", json=payload)
 
@@ -508,7 +508,7 @@ class TestKafkaIntegration:
 
     def test_send_message_invalid_routing_id_header(self):
         """Test /send endpoint with invalid X-Routing-ID header"""
-        payload = {"message_response": "Response from Kafka"}
+        payload = {"text": "Response from Kafka"}
         headers = {"X-Routing-ID": "invalid-format"}
 
         response = client.post("/telegram/send", json=payload, headers=headers)
