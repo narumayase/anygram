@@ -3,3 +3,5 @@ uvicorn
 httpx
 pydantic
 python-dotenv
+pytest
+kafka-python
