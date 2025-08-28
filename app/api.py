@@ -11,8 +11,12 @@ router = APIRouter()
 
 @router.post("/send")
 async def send_message(request: Request, msg: Message):
-    if msg.chat_id is None:
-        routing_id = request.headers.get("X-Routing-ID")
+    logger.debug(f"Received message: {msg}")
+
+    if not msg.chat_id:
+        routing_id = request.headers.get("X-Routing-ID") or request.headers.get("X-Routing-Id")
+        logger.debug(f"Received X-Routing-ID: {routing_id}")
+
         if routing_id:
             try:
                 origin, chat_id = routing_id.split(":")
@@ -21,7 +25,7 @@ async def send_message(request: Request, msg: Message):
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid X-Routing-ID header format")
 
-    if msg.chat_id is None:
+    if not msg.chat_id:
         raise HTTPException(status_code=400, detail="chat_id is required")
 
     try:
