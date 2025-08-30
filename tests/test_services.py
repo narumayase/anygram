@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import unittest.mock
 
 # Import the functions to be tested
-from app.services import send_telegram_message, ask_llm, send_kafka_message
+from app.services import send_telegram_message, ask_llm, send_message_to_gateway
 
 
 # Mock for the message object used by send_telegram_message
@@ -325,42 +325,37 @@ class TestAskLlm:
                 await ask_llm(prompt)
 
 
-class TestSendKafkaMessage:
-    """Test suite for the send_kafka_message function"""
 
-    @patch('app.services.KafkaProducer')
-    @patch('app.services.KAFKA_BROKER', 'localhost:9092')
-    @patch('app.services.KAFKA_TOPIC', 'anygram.prompts')
-    def test_send_kafka_message_success(self, mock_kafka_producer):
-        """Test that send_kafka_message sends a message correctly to Kafka"""
-        mock_producer_instance = MagicMock()
-        mock_kafka_producer.return_value = mock_producer_instance
-        
-        prompt = "Test prompt for Kafka"
+
+
+class TestSendMessageToGateway:
+    """Test suite for the send_message_to_gateway function"""
+
+    @pytest.mark.asyncio
+    @patch('app.services.GATEWAY_URL', 'http://localhost:8000/gateway')
+    async def test_send_message_to_gateway_success(self):
+        """Test that send_message_to_gateway sends a message correctly to the gateway"""
+        prompt = "Test prompt for gateway"
         chat_id = "12345"
 
-        send_kafka_message(prompt, chat_id)
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None  # No error
 
-        # Check that KafkaProducer was instantiated correctly
-        mock_kafka_producer.assert_called_once_with(
-            bootstrap_servers='localhost:9092',
-            value_serializer=unittest.mock.ANY,
-            key_serializer=unittest.mock.ANY
-        )
-        
-        # Check that send was called with correct parameters
-        mock_producer_instance.send.assert_called_once_with(
-            'anygram.prompts',
-            key=f"telegram:{chat_id}",
-            value={"prompt": prompt},
-            headers=[
-                ('correlation_id', unittest.mock.ANY),
-                ('origin', b'anygram')
-            ]
-        )
-        
-        # Check that flush was called
-        mock_producer_instance.flush.assert_called_once()
+        mock_client = AsyncMock()
+        mock_client.post.return_value = mock_response
+
+        with patch('httpx.AsyncClient') as mock_async_client:
+            mock_async_client.return_value.__aenter__.return_value = mock_client
+
+            await send_message_to_gateway(prompt, chat_id)
+
+            # Verify that the correct POST call was made
+            expected_url = "http://localhost:8000/gateway"
+            mock_client.post.assert_called_once_with(
+                expected_url,
+                json=unittest.mock.ANY # The payload contains dynamic values (uuid, base64 encoded content)
+            )
+            mock_response.raise_for_status.assert_called_once()
 
 
 # Useful fixtures for reuse in tests
