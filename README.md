@@ -49,10 +49,9 @@ anygram
    RELOAD=true
    LOG_LEVEL=INFO
 
-   # Kafka configuration (optional)
-   KAFKA_ENABLED=false
-   KAFKA_BROKER=localhost:9092
-   KAFKA_TOPIC=input-messages
+   # Gateway configuration (optional)
+   GATEWAY_ENABLED=true
+   GATEWAY_URL=http://localhost:8003/api/v1/send
    ```
 
 ## Environment Variables
@@ -64,9 +63,8 @@ anygram
 - `PORT`: API port (optional, defaults to `8000`).
 - `RELOAD`: Enable auto-reloading of the server (optional, defaults to `true`).
 - `LOG_LEVEL`: Logging level (optional, defaults to `INFO`).
-- `KAFKA_ENABLED`: Enable Kafka integration (optional, defaults to `false`).
-- `KAFKA_BROKER`: Kafka broker address (optional, defaults to `localhost:9092`).
-- `KAFKA_TOPIC`: Kafka topic for prompts (optional, defaults to `anygram.prompts`).
+- `GATEWAY_ENABLED`: Enable Gateway integration (optional, defaults to `false`).
+- `GATEWAY_URL`: Gateway address (optional, defaults to `http://localhost:8003/api/v1/send`).
 
 ## Usage
 
@@ -77,24 +75,23 @@ uvicorn app.main:app --host $HOST --port $PORT
 
 By default, the API will be available at `http://127.0.0.1:8000`.
 
-## Kafka Integration
+## Gateway Integration
 
 This API supports integration with Kafka for asynchronous message processing. When Kafka is enabled, incoming messages from Telegram webhooks will be sent to a Kafka topic instead of being processed directly by the LLM.
 
 To enable Kafka integration, set the `KAFKA_ENABLED` environment variable to `true` in your `.env` file:
 
 ```
-KAFKA_ENABLED=true
-KAFKA_BROKER=localhost:9092  # Your Kafka broker address
-KAFKA_TOPIC=anygram.prompts  # The topic to send messages to
+GATEWAY_ENABLED=true
+GATEWAY_URL=http://localhost:8003/api/v1/send
 ```
 
-When `KAFKA_ENABLED` is `true`:
-- The `/telegram/webhook` endpoint will send the incoming message to the configured Kafka topic.
-- The API will respond immediately with `{"ok": True, "source": "kafka"}`.
-- The actual LLM processing and Telegram response will be handled by a separate consumer service that reads from the Kafka topic.
+When `GATEWAY_ENABLED` is `true`:
+- The `/telegram/webhook` endpoint will send the incoming message to the configured Gateway.
+- The API will respond immediately with `{"ok": True, "source": "gateway"}`.
+- The actual LLM processing and Telegram response will be handled by a separate consumer service.
 
-If `KAFKA_ENABLED` is `false` (default), the API will process messages synchronously using the LLM and respond directly via Telegram, as described in the "Webhook" section.
+If `GATEWAY_ENABLED` is `false` (default), the API will process messages synchronously using the LLM and respond directly via Telegram, as described in the "Webhook" section.
 
 ## Endpoints
 
@@ -156,4 +153,3 @@ pytest --cov=app --cov-report=term-missing tests/
 ## BackLog
 
 - [x] Unit Tests.
-- [x] Add integration with kafka (producer).

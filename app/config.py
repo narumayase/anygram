@@ -10,10 +10,9 @@ TELEGRAM_API_URL = os.getenv("TELEGRAM_API_URL", "https://api.telegram.org")
 # llm configuration
 LLM_URL = os.getenv("LLM_URL", "http://localhost:8081/api/v1/chat/ask")
 
-# kafka configuration
-KAFKA_ENABLED = os.getenv("KAFKA_ENABLED", "false").lower() == "true"
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
-KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "anygram.prompts")
+# anyway configuration
+GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8003/api/v1/send")
+GATEWAY_ENABLED = os.getenv("GATEWAY_ENABLED", "false").lower() == "true"
 
 # server configuration
 HOST = os.getenv("HOST", "127.0.0.1")
@@ -36,6 +35,5 @@ def validate_config():
     print(f"   - LLM URL: {LLM_URL}")
     print(f"   - Reload: {RELOAD}")
     print(f"   - Log level: {LOG_LEVEL}")
-    if KAFKA_ENABLED:
-        print(f"   - Kafka Broker: {KAFKA_BROKER}")
-        print(f"   - Kafka Topic: {KAFKA_TOPIC}")
+    if GATEWAY_ENABLED:
+        print(f"   - Gateway URL: {GATEWAY_URL}")

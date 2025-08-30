@@ -1,7 +1,7 @@
 from app.models import Message
 from fastapi import APIRouter, Request, HTTPException
-from app.services import send_telegram_message, ask_llm, send_kafka_message
-from app.config import KAFKA_ENABLED
+from app.services import send_telegram_message, ask_llm, send_message_to_gateway
+from app.config import GATEWAY_ENABLED
 import logging
 
 # Configure logging
@@ -46,13 +46,13 @@ async def telegram_webhook(request: Request):
         prompt = data["message"]["text"]
         chat_id = data["message"]["chat"]["id"]
 
-        if KAFKA_ENABLED:
+        if GATEWAY_ENABLED:
             try:
-                send_kafka_message(prompt, str(chat_id))
-                return {"ok": True, "source": "kafka"}
+                await send_message_to_gateway(prompt, str(chat_id))
+                return {"ok": True, "source": "gateway"}
             except Exception as e:
-                logger.error(f"Error sending Kafka message: {e}")
-                raise HTTPException(status_code=500, detail="Error sending message to Kafka")
+                logger.error(f"Error sending message to gateway: {e}")
+                raise HTTPException(status_code=500, detail="Error sending message to gateway")
         else:
             try:
                 llm_response = await ask_llm(prompt)

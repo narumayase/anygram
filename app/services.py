@@ -1,9 +1,9 @@
 import httpx
-import json
-from .config import TELEGRAM_API_URL, TELEGRAM_TOKEN, LLM_URL, KAFKA_BROKER, KAFKA_TOPIC
-from kafka import KafkaProducer
+from .config import TELEGRAM_API_URL, TELEGRAM_TOKEN, LLM_URL, GATEWAY_URL
 import logging
 from uuid import uuid4
+import json
+import base64
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -36,29 +36,25 @@ async def ask_llm(prompt: str) -> str:
 
         return data["response"]
 
-def send_kafka_message(prompt: str, chat_id: str):
-    producer = KafkaProducer(
-        bootstrap_servers=KAFKA_BROKER,
-        value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-        key_serializer=lambda k: k.encode('utf-8')
-    )
-
+async def send_message_to_gateway(prompt: str, chat_id: str) -> None:
     correlation_id = str(uuid4())
     key = f"telegram:{chat_id}"
-    headers = [
-        ('correlation_id', correlation_id.encode('utf-8')),
-        ('origin', b'anygram')
-    ] 
+    content_json = json.dumps({"prompt": prompt})
+    content_base64 = base64.b64encode(content_json.encode("utf-8")).decode("utf-8")
 
-    logger.debug(f"key to send to kafka: {key}")
-    logger.debug(f"headers to send to kafka: {headers}")
-    logger.debug(f"payload to send to kafka: {{'prompt': prompt}}")
+    payload = {"key": key,
+               "headers": {
+                   "correlation-id": correlation_id
+               },
+               "content": content_base64
+               }
 
-    producer.send(
-        KAFKA_TOPIC,
-        key=key,
-        value={"prompt": prompt},
-        headers=headers
-    )
-    producer.flush()
-    producer.close()
+    logger.debug(f"payload to send to anyway: {payload}")
+    logger.info(f"key to send to anyway: {key}")
+    logger.info(f"header to send to anyway: correlation-id: {correlation_id}")
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(GATEWAY_URL, json=payload)
+        logger.debug(f"status code from anyway: response status: {resp.status_code}")
+
+        resp.raise_for_status()
