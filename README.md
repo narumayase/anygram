@@ -156,4 +156,4 @@ pytest --cov=app --cov-report=term-missing tests/
 ## BackLog
 
 - [x] Unit Tests.
-- [ ] Add integration with kafka (producer).
+- [x] Add integration with kafka (producer).
