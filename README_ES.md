@@ -1,18 +1,18 @@
 # anygram API
 
-anygram es una API construida con FastAPI que permite enviar y recibir mensajes a través de un bot de Telegram, integrando respuestas automáticas generadas por un modelo LLM (Large Language Model).
+anygram es una API construida con FastAPI que permite enviar y recibir mensajes a través de un bot de Telegram, integrando respuestas automáticas generadas por un LLM (Large Language Model).
 
 La API expone dos endpoints principales:
 
 - **`/telegram/send`**: Permite enviar mensajes a cualquier chat de Telegram a través del bot.
-- **`/telegram/webhook`**: Recibe mensajes enviados al bot desde Telegram, envía el texto recibido a una API LLM y responde automáticamente al usuario con la respuesta generada.
+- **`/telegram/webhook`**: Recibe mensajes enviados al bot desde Telegram, reenvía el texto recibido a una API de LLM y responde automáticamente al usuario con la respuesta generada.
 
 ## Estructura del Proyecto
 
 ```
 anygram
 ├── app
-│   ├── api.py              # Endpoints 
+│   ├── api.py              # Endpoints
 │   ├── models.py           # Modelos Pydantic o entidades simples
 │   ├── services.py         # Integraciones (Telegram, LLM)
 │   ├── config.py           # Configuración (dotenv, etc.)
@@ -23,24 +23,24 @@ anygram
 
 ## Configuración
 
-1. Crear un entorno virtual:
+1. Crea un entorno virtual:
    ```
    python -m venv venv
-   source venv/bin/activate  # En Windows usar `venv\Scripts\activate`
+   source venv/bin/activate  # En Windows usa `venv\Scripts\activate`
    ```
 
-2. Instalar dependencias:
+2. Instala las dependencias:
    ```
    pip install -r requirements.txt
    ```
 
-3. Crear un archivo `.env`:
+3. Crea un archivo `.env`:
    ```
-   # Configuración de Telegram (obligatoria)
-   TELEGRAM_TOKEN=tu_api_token
+   # Configuración de Telegram (obligatorio)
+   TELEGRAM_TOKEN=tu_token_api
    TELEGRAM_API_URL="https://api.telegram.org"
 
-   # Configuración del LLM (obligatoria)   
+   # Configuración de LLM (obligatorio)
    LLM_URL=http://localhost:8081/api/v1/chat/ask
 
    # Configuración del servidor (opcional)
@@ -49,24 +49,22 @@ anygram
    RELOAD=true
    LOG_LEVEL=INFO
 
-   # Configuración de Kafka (opcional)
-   KAFKA_ENABLED=false
-   KAFKA_BROKER=localhost:9092
-   KAFKA_TOPIC=anygram.prompts
+   # Configuración de Gateway (opcional)
+   GATEWAY_ENABLED=true
+   GATEWAY_URL=http://localhost:8003/api/v1/send
    ```
-   
+
 ## Variables de Entorno
 
 - `TELEGRAM_TOKEN`: Token del bot de Telegram (obligatorio).
 - `TELEGRAM_API_URL`: URL de la API de Telegram (opcional, por defecto `https://api.telegram.org`).
-- `LLM_URL`: URL de la API del LLM (opcional, por defecto `http://localhost:8081/api/v1/chat/ask`).
+- `LLM_URL`: URL de la API de LLM (opcional, por defecto `http://localhost:8081/api/v1/chat/ask`).
 - `HOST`: Host de la API (opcional, por defecto `127.0.0.1`).
 - `PORT`: Puerto de la API (opcional, por defecto `8000`).
-- `RELOAD`: Habilitar la recarga automática del servidor (opcional, por defecto `true`).
+- `RELOAD`: Habilita la recarga automática del servidor (opcional, por defecto `true`).
 - `LOG_LEVEL`: Nivel de registro (opcional, por defecto `INFO`).
-- `KAFKA_ENABLED`: Habilitar la integración con Kafka (opcional, por defecto `false`).
-- `KAFKA_BROKER`: Dirección del broker de Kafka (opcional, por defecto `localhost:9092`).
-- `KAFKA_TOPIC`: Tema de Kafka para los prompts (opcional, por defecto `anygram.prompts`).
+- `GATEWAY_ENABLED`: Habilita la integración con Gateway (opcional, por defecto `false`).
+- `GATEWAY_URL`: Dirección del Gateway (opcional, por defecto `http://localhost:8003/api/v1/send`).
 
 ## Uso
 
@@ -77,30 +75,29 @@ uvicorn app.main:app --host $HOST --port $PORT
 
 Por defecto, la API estará disponible en `http://127.0.0.1:8000`.
 
-## Integración con Kafka
+## Integración con Gateway
 
-Esta API soporta la integración con Kafka para el procesamiento asíncrono de mensajes. Cuando Kafka está habilitado, los mensajes entrantes de los webhooks de Telegram se enviarán a un tema de Kafka en lugar de ser procesados directamente por el LLM.
+Esta API soporta la integración con un Gateway para el procesamiento asíncrono de mensajes. Cuando el Gateway está habilitado, los mensajes entrantes de los webhooks de Telegram se enviarán a un Gateway en lugar de ser procesados directamente por el LLM.
 
-Para habilitar la integración con Kafka, establece la variable de entorno `KAFKA_ENABLED` a `true` en tu archivo `.env`:
+Para habilitar la integración con Gateway, establece la variable de entorno `GATEWAY_ENABLED` a `true` en tu archivo `.env`:
 
 ```
-KAFKA_ENABLED=true
-KAFKA_BROKER=localhost:9092  # Dirección de tu broker de Kafka
-KAFKA_TOPIC=anygram.prompts  # El tema al que se enviarán los mensajes
+GATEWAY_ENABLED=true
+GATEWAY_URL=http://localhost:8003/api/v1/send
 ```
 
-Cuando `KAFKA_ENABLED` es `true`:
-- El endpoint `/telegram/webhook` enviará el mensaje entrante al tema de Kafka configurado.
-- La API responderá inmediatamente con `{"ok": True, "source": "kafka"}`.
-- El procesamiento real del LLM y la respuesta de Telegram serán manejados por un servicio consumidor separado que lee del tema de Kafka.
+Cuando `GATEWAY_ENABLED` es `true`:
+- El endpoint `/telegram/webhook` enviará el mensaje entrante al Gateway configurado.
+- La API responderá inmediatamente con `{"ok": True, "source": "gateway"}`.
+- El procesamiento real del LLM y la respuesta de Telegram serán manejados por un servicio consumidor separado.
 
-Si `KAFKA_ENABLED` es `false` (por defecto), la API procesará los mensajes de forma síncrona usando el LLM y responderá directamente a través de Telegram, como se describe en la sección "Webhook".
+Si `GATEWAY_ENABLED` es `false` (por defecto), la API procesará los mensajes de forma síncrona usando el LLM y responderá directamente a través de Telegram, como se describe en la sección "Webhook".
 
 ## Endpoints
 
 ### GET /health
 
-Chequea el estado de la API.
+Verifica el estado de la API.
 
 ```json
 {
@@ -113,7 +110,7 @@ Chequea el estado de la API.
 
 ### Enviar un Mensaje
 
-Hacer un POST a `/telegram/send` envía un mensaje a través del bot de Telegram usando el siguiente cuerpo:
+POST a `/telegram/send` envía un mensaje a través del bot de Telegram usando el siguiente cuerpo:
 
 ```json
 {
@@ -124,30 +121,30 @@ Hacer un POST a `/telegram/send` envía un mensaje a través del bot de Telegram
 
 ### Webhook (Recibir y Responder Mensajes)
 
-El endpoint `/telegram/webhook` recibe mensajes de Telegram y responde automáticamente usando la integración con la API LLM.
+El endpoint `/telegram/webhook` recibe mensajes de Telegram y responde automáticamente usando la integración con la API de LLM.
 
-**Ejemplo de Configuración del Webhook:**
+**Ejemplo de Configuración de Webhook:**
 
-1. Exponer la API local usando [ngrok](https://ngrok.com/):
+1. Expón la API local usando [ngrok](https://ngrok.com/):
    ```
    ngrok http 8000
    ```
 
-2. Configurar el webhook en Telegram:
+2. Configura el webhook en Telegram:
    ```
    curl -X POST "https://api.telegram.org/bot<TELEGRAM_TOKEN>/setWebhook?url=https://<NGROK_URL>/telegram/webhook"
    ```
-   Reemplazar `<TELEGRAM_TOKEN>` y `<NGROK_URL>` por los valores correctos.
+   Reemplaza `<TELEGRAM_TOKEN>` y `<NGROK_URL>` con los valores correctos.
 
-# Testing
+# Pruebas
 
-- Todos los tests:
+- Todas las pruebas:
 
 ```bash
 pytest
 ```
 
-- Todos los tests con su coverage:
+- Todas las pruebas con cobertura:
 
 ```bash
 pytest --cov=app --cov-report=term-missing tests/
@@ -155,4 +152,4 @@ pytest --cov=app --cov-report=term-missing tests/
 
 ## BackLog
 
-- [x] Test Unitarios.
+- [x] Pruebas Unitarias.

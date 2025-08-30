@@ -137,7 +137,7 @@ class TestTelegramWebhookEndpoint:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_webhook_success(self, mock_ask_llm, mock_send_telegram):
         """Successful test of the Telegram webhook"""
         # Mock the response from the LLM
@@ -186,7 +186,7 @@ class TestTelegramWebhookEndpoint:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_webhook_group_chat(self, mock_ask_llm, mock_send_telegram):
         """Test webhook with a group chat message"""
         mock_ask_llm.return_value = "Response for the group"
@@ -219,7 +219,7 @@ class TestTelegramWebhookEndpoint:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_webhook_with_emojis_and_special_chars(self, mock_ask_llm, mock_send_telegram):
         """Test webhook with emojis and special characters"""
         mock_ask_llm.return_value = "Response with emojis! 🤖"
@@ -304,7 +304,7 @@ class TestTelegramWebhookEndpoint:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_webhook_llm_service_error(self, mock_ask_llm, mock_send_telegram):
         """Test when the LLM service fails"""
         # Mock that raises an exception in ask_llm
@@ -334,7 +334,7 @@ class TestTelegramWebhookEndpoint:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_webhook_telegram_service_error(self, mock_ask_llm, mock_send_telegram):
         """Test when sending via Telegram fails"""
         mock_ask_llm.return_value = "LLM's response"
@@ -370,7 +370,7 @@ class TestApiIntegration:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_full_conversation_flow(self, mock_ask_llm, mock_send_telegram):
         """Test the full flow: webhook -> LLM -> response"""
         # Configure mocks
@@ -413,6 +413,24 @@ class TestApiIntegration:
         assert mock_send_telegram.call_count == 2
 
 
+class TestGatewayIntegration:
+    """Tests for Gateway integration"""
+
+    @patch('app.api.send_message_to_gateway', new_callable=AsyncMock)
+    @patch('app.api.GATEWAY_ENABLED', True)
+    @patch('app.api.ask_llm', new_callable=AsyncMock)
+    @patch('app.api.send_telegram_message', new_callable=AsyncMock)
+    def test_webhook_with_gateway_enabled(self, mock_send_telegram_message, mock_ask_llm, mock_send_message_to_gateway, sample_webhook_payload):
+        """Test that the webhook sends a message to the gateway when enabled"""
+        response = client.post("/telegram/webhook", json=sample_webhook_payload)
+
+        assert response.status_code == 200
+        assert response.json() == {"ok": True, "source": "gateway"}
+        mock_send_message_to_gateway.assert_called_once_with(sample_webhook_payload["message"]["text"], str(sample_webhook_payload["message"]["chat"]["id"]))
+        mock_ask_llm.assert_not_called()
+        mock_send_telegram_message.assert_not_called()
+
+
 # Useful fixtures for API tests
 @pytest.fixture
 def sample_webhook_payload():
@@ -452,7 +470,7 @@ class TestApiWithFixtures:
     
     @patch('app.api.send_telegram_message', new_callable=AsyncMock)
     @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.KAFKA_ENABLED', False)
+    @patch('app.api.GATEWAY_ENABLED', False)
     def test_webhook_with_fixture(self, mock_ask_llm, mock_send_telegram, sample_webhook_payload):
         """Test webhook using a fixture"""
         mock_ask_llm.return_value = "Response from LLM"
@@ -474,56 +492,4 @@ class TestApiWithFixtures:
         called_msg = mock_send_telegram.call_args[0][0]
         assert called_msg.text == "Test message from fixture"
 
-class TestKafkaIntegration:
-    """Tests for Kafka integration"""
 
-    @patch('app.api.send_kafka_message')
-    @patch('app.api.KAFKA_ENABLED', True)
-    @patch('app.api.ask_llm', new_callable=AsyncMock)
-    @patch('app.api.send_telegram_message', new_callable=AsyncMock)
-    def test_webhook_with_kafka_enabled(self, mock_send_telegram_message, mock_ask_llm, mock_send_kafka_message, sample_webhook_payload):
-        """Test that the webhook sends a message to Kafka when enabled"""
-        response = client.post("/telegram/webhook", json=sample_webhook_payload)
-
-        assert response.status_code == 200
-        assert response.json() == {"ok": True, "source": "kafka"}
-        mock_send_kafka_message.assert_called_once_with(sample_webhook_payload["message"]["text"], str(sample_webhook_payload["message"]["chat"]["id"]))
-        mock_ask_llm.assert_not_called()
-        mock_send_telegram_message.assert_not_called()
-        mock_send_kafka_message.assert_called_once_with("Hello bot!", "987654321")
-
-    @patch('app.api.send_telegram_message', new_callable=AsyncMock)
-    def test_send_message_with_routing_id_header(self, mock_send_telegram):
-        """Test /send endpoint with X-Routing-ID header"""
-        # Mock the return value properly
-        mock_send_telegram.return_value = {"ok": True, "result": {"message_id": 42}}
-        
-        payload = {"text": "Response from Kafka"}
-        headers = {"X-Routing-ID": "telegram:12345"}
-
-        response = client.post("/telegram/send", json=payload, headers=headers)
-
-        assert response.status_code == 200
-        mock_send_telegram.assert_called_once()
-        called_msg = mock_send_telegram.call_args[0][0]
-        assert called_msg.chat_id == "12345"
-        assert called_msg.text == "Response from Kafka"
-
-    def test_send_message_missing_routing_id_header(self):
-        """Test /send endpoint with missing X-Routing-ID header"""
-        payload = {"text": "Response from Kafka"}
-
-        response = client.post("/telegram/send", json=payload)
-
-        assert response.status_code == 400
-        assert "chat_id is required" in response.json()["detail"]
-
-    def test_send_message_invalid_routing_id_header(self):
-        """Test /send endpoint with invalid X-Routing-ID header"""
-        payload = {"text": "Response from Kafka"}
-        headers = {"X-Routing-ID": "invalid-format"}
-
-        response = client.post("/telegram/send", json=payload, headers=headers)
-
-        assert response.status_code == 400
-        assert "Invalid X-Routing-ID header format" in response.json()["detail"]
