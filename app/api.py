@@ -1,21 +1,19 @@
 from app.models import Message
 from fastapi import APIRouter, Request, HTTPException
 from app.services import send_telegram_message, ask_llm, send_message_to_gateway
+from app.logger import logger, RequestLoggerAdapter
 from app.config import GATEWAY_ENABLED
-import logging
-
-# Configure logging
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 @router.post("/send")
 async def send_message(request: Request, msg: Message):
-    logger.debug(f"Received message: {msg}")
+    log: RequestLoggerAdapter = request.state.logger
+    log.debug(f"Received message: {msg}")
 
     if not msg.chat_id:
-        routing_id = request.headers.get("X-Routing-ID") or request.headers.get("X-Routing-Id")
-        logger.debug(f"Received X-Routing-ID: {routing_id}")
+        routing_id = request.headers.get("X-Routing-ID") or request.headers.get("X-Routing-Id") 
+        log.debug(f"Received X-Routing-ID: {routing_id}")
 
         if routing_id:
             try:
@@ -29,16 +27,18 @@ async def send_message(request: Request, msg: Message):
         raise HTTPException(status_code=400, detail="chat_id is required")
 
     try:
-        return await send_telegram_message(msg)
+        return await send_telegram_message(msg, request)
     except Exception as e:
         logger.error(f"Error sending Telegram message: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
+    log: RequestLoggerAdapter = request.state.logger
+
     try:
         data = await request.json()
-        logger.debug("message received:", data)
+        log.debug(f"message received: {data}")
 
         if "message" not in data or "text" not in data["message"] or "chat" not in data["message"] or "id" not in data["message"]["chat"]:
             raise HTTPException(status_code=400, detail="Invalid Telegram webhook payload")
@@ -48,24 +48,24 @@ async def telegram_webhook(request: Request):
 
         if GATEWAY_ENABLED:
             try:
-                await send_message_to_gateway(prompt, str(chat_id))
+                await send_message_to_gateway(prompt, str(chat_id), request)
                 return {"ok": True, "source": "gateway"}
             except Exception as e:
-                logger.error(f"Error sending message to gateway: {e}")
+                log.error(f"Error sending message to gateway: {e}")
                 raise HTTPException(status_code=500, detail="Error sending message to gateway")
         else:
             try:
-                llm_response = await ask_llm(prompt)
+                llm_response = await ask_llm(prompt, request)
             except Exception as e:
-                logger.error(f"Error querying LLM: {e}")
+                log.error(f"Error querying LLM: {e}")
                 raise HTTPException(status_code=500, detail="Error processing query")
             
             msg = Message(chat_id=chat_id, text=llm_response)
             
             try:
-                await send_telegram_message(msg)
+                await send_telegram_message(msg, request)
             except Exception as e:
-                logger.error(f"Error sending Telegram response: {e}")
+                log.error(f"Error sending Telegram response: {e}")
                 raise HTTPException(status_code=500, detail="Error sending response")
             
             return {"ok": True, "source": "llm"}
@@ -73,6 +73,6 @@ async def telegram_webhook(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error in webhook: {e}")
+        log.error(f"Unexpected error in webhook: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
     
