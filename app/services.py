@@ -1,20 +1,13 @@
 import httpx
-from .config import TELEGRAM_API_URL, TELEGRAM_TOKEN, LLM_URL, GATEWAY_URL
+from .config import TELEGRAM_API_URL, TELEGRAM_TOKEN, LLM_URL, GATEWAY_API_URL
 from fastapi import Request
 from app.logger import logger, RequestLoggerAdapter
 from uuid import uuid4
 import json
 import base64
 
-request_id = str(uuid4())
-log = RequestLoggerAdapter(logger, {"request_id": request_id})
-
 async def send_telegram_message(msg, request: Request):
     log: RequestLoggerAdapter = request.state.logger
-
-    log = RequestLoggerAdapter(logger, {"request_id":  request_id or str(uuid4())})
-
-    request_id = request_id or str(uuid4())
     url = f"{TELEGRAM_API_URL}/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {"chat_id": msg.chat_id, "text": msg.text}
 
@@ -30,6 +23,7 @@ async def send_telegram_message(msg, request: Request):
 
 async def ask_llm(prompt: str, request: Request) -> str:
     log: RequestLoggerAdapter = request.state.logger
+    request_id = log.extra['request_id']
 
     payload = {"prompt": prompt}
     headers = {
@@ -50,6 +44,7 @@ async def ask_llm(prompt: str, request: Request) -> str:
 
 async def send_message_to_gateway(prompt: str, chat_id: str, request: Request) -> None:
     log: RequestLoggerAdapter = request.state.logger
+    request_id = log.extra['request_id']
     
     correlation_id = str(uuid4())
     key = f"telegram:{chat_id}"
@@ -69,7 +64,7 @@ async def send_message_to_gateway(prompt: str, chat_id: str, request: Request) -
     log.info(f"header to send to anyway: correlation-id: {correlation_id}")
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(GATEWAY_URL, json=payload, headers=headers)
+        resp = await client.post(GATEWAY_API_URL, json=payload, headers=headers)
         log.debug(f"status code from anyway: response status: {resp.status_code}")
 
         resp.raise_for_status()

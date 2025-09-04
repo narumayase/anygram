@@ -64,7 +64,7 @@ anygram
 - `RELOAD`: Enable auto-reloading of the server (optional, defaults to `true`).
 - `LOG_LEVEL`: Logging level (optional, defaults to `INFO`).
 - `GATEWAY_ENABLED`: Enable Gateway integration (optional, defaults to `false`).
-- `GATEWAY_URL`: Gateway address (optional, defaults to `http://localhost:8003/api/v1/send`).
+- `GATEWAY_API_URL`: Gateway address (optional, defaults to `http://localhost:8003/api/v1/send`).
 
 ## Usage
 
@@ -83,7 +83,7 @@ To enable Kafka integration, set the `KAFKA_ENABLED` environment variable to `tr
 
 ```
 GATEWAY_ENABLED=true
-GATEWAY_URL=http://localhost:8003/api/v1/send
+GATEWAY_API_URL=http://localhost:8003/api/v1/send
 ```
 
 When `GATEWAY_ENABLED` is `true`:
